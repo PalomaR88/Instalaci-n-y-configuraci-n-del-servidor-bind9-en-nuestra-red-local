@@ -63,4 +63,131 @@ El registro SOA de la zona inversa es igual que en la zona directa.
 
 
 
+# Servidor maestro/esclavo
+Cada cierto tiempo, las zonas que tienen maestro se sincronizan, por lo que si el maestro falla responde un esclavo. Pero los esclavos no se tocan, entre ellos se configuran.
+
+Un servidor esclavo contiene una réplica de las zonas del maestro:
+- DNS maestro: dns-1.ejemplo.com (10.0.0.10)
+- DNS esclavo: dns-2.ejemplo.com (10.0.0.5)
+
+Se debe producir una transferecia de zona (el esclavo hace una solicutus de la zona completa del maestro para que se sincronicen lo servidores. 
+
+Por seguridad, sólo deben aceptar transferencias de zonas hacia los esclavos autorizados, para ello en el fichero /etc/bind/named.conf.options, deshabilitamos la tranferencia:
+~~~
+options{
+	...
+	allow-transfer { none; }
+}
+~~~
+Por defecto no se transfiere a nadie. PEro hay otras formas de configuración:
+
+~~~
+zone ejemplo.com {
+	type master;
+	file "db.ejemplo.com";
+	allow-transfer { 10.0.0.5; }
+};
+~~~
+
+~~~
+zone ejemplo.com {
+	type slave;
+	file "db.ejemplo.com";
+	allow-transfer { 10.0.0.10; }
+};
+~~~
+
+### Zona directa del maestro
+~~~
+@	in	ns		dns-2.ejemplo.com.
+...
+dns-2	in	A 		10.0.0.5
+~~~
+
+### Transferencia de zona
+Cuando se reinicia el servidor esclavo podemos ver como se ha producido una transferencia de zona:
+~~~
+systemctl restart bind9
+tail /var/log/syslog
+~~~
+
+En syslog se puede ver si se hace correctamente la transferencia.
+
+
+### ¿Cuándo se hacen las copias?
+El esclavo solo iniciará la copia cuando el número de serie configurado en la SOA aumente.
+~~~
+$TTS 86400
+@	in 	SOA	dns-1.ejemplo.com.	root.ejemplo.com. (
+		# este número es el que hay que aumentar 
+		# para que los esclavos se actualizan
+		1	; serial
+		604800	; refresh
+		86400	; retry
+		2419200	; expire
+		86400)	; negativa cache TTL
+...
+~~~
+
+Pero puede pasar que se cambie el maestro cambiiando el número de serie pero al esclavo no le llegue. ESte fallo no se notifica.
+
+El formato recomendado del número de serie es YYMMDDNN: 19111801 (año, mes, dia, número).
+
+**Primer tiempo**
+Como puede haber algunas pérdidas de paquetes, el esclavo le pregunta al maestro en un intervalo de de tiempo (refresh). 
+
+**Segundo tiempo**
+retry: si el esclavo pregunta pero este no responde lo va a intentar cada cierto tiempo más pequeño que el refresh.
+
+**Tercer tiempo**
+expire: tras el tiempo transcurrido, el maestro no responde al retry. Durente este tiempo, el esclavo ha seguido con la zona del esclavo, pero si se cumple el tiempo y no responde se inmola. 
+
+**Cuarto tiempo**
+Cuando pregunta por un nombre que no existe se guarda en caché durante este tiempo.
+
+
+## Evitar errores
+- cada vez que se realice una modificación recuerda incrementar el número de serie.
+- Para detectar errores de sintaxis puedes usar el comando:
+~~~
+named-checkzone ejamplo.com...
+~~~
+
+Solicitar una zona completa desde el esclavo al maestro:
+~~~
+dig @x.x.x.x ejemplo.com. axfr
+~~~
+
+
+# Subdominios en bind9
+## Subdominios virtuales
+www.ejemplo.com {www.es.ejemplo.com, www.doc.ejemplo.com}
+1 dns tiene autoridad sobre todo.
+
+Este no es el tipo de subdominio que usaremos en las prácticas.
+
+~~~
+$ORIGIN es.ejempo.com
+web	in	A 	10.0.0.100
+www	in	CNAME	web
+~~~
+
+
+## Delegación de subdominios
+1 dns tiene dominio sobre www.ejemplo.com
+1 dns tiene autoridad sobre www.es.ejemplo.com
+
+Cuando a un servidor DNS le pregunten por el subdominio le redirege la pregunta (realmente no redirige sino que pregunta de nuevo) al servidor DNS que controla el subdominio. 
+~~~
+$ORIGIN	es.ejemplo.com.
+@	in	ns	dns-3
+dns-3	in	A	10.0.0.13
+~~~
+
+
+
+
+
+
+
 
