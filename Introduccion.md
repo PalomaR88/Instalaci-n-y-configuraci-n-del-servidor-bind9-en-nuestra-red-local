@@ -160,8 +160,8 @@ dig @x.x.x.x ejemplo.com. axfr
 ~~~
 
 
-# Subdominios en bind9
-## Subdominios virtuales
+## Subdominios en bind9
+### Subdominios virtuales
 www.ejemplo.com {www.es.ejemplo.com, www.doc.ejemplo.com}
 1 dns tiene autoridad sobre todo.
 
@@ -174,7 +174,7 @@ www	in	CNAME	web
 ~~~
 
 
-## Delegación de subdominios
+### Delegación de subdominios
 1 dns tiene dominio sobre www.ejemplo.com
 1 dns tiene autoridad sobre www.es.ejemplo.com
 
@@ -184,11 +184,4 @@ $ORIGIN	es.ejemplo.com.
 @	in	ns	dns-3
 dns-3	in	A	10.0.0.13
 ~~~
-
-
-
-
-
-
-
 
