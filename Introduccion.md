@@ -1,6 +1,6 @@
 # Instalación y configuración del servidor bind9 en nuestra red local
 
-## Se configura el fichero /etc/bind9/named.conf.local:
+## Configuración del fichero /etc/bind9/named.conf.local:
 ~~~
 zone "iesgn.org"
 {
@@ -63,7 +63,7 @@ El registro SOA de la zona inversa es igual que en la zona directa.
 
 
 
-# Servidor maestro/esclavo
+## Servidor maestro/esclavo
 Cada cierto tiempo, las zonas que tienen maestro se sincronizan, por lo que si el maestro falla responde un esclavo. Pero los esclavos no se tocan, entre ellos se configuran.
 
 Un servidor esclavo contiene una réplica de las zonas del maestro:
