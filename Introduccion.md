@@ -1,6 +1,7 @@
 # Instalación y configuración del servidor bind9 en nuestra red local
 
-## Configuración del fichero /etc/bind9/named.conf.local:
+## Configuración de las zonas
+### Configuración del fichero /etc/bind9/named.conf.local:
 ~~~
 zone "iesgn.org"
 {
@@ -17,7 +18,7 @@ Existen dos tipos de servidores, maestos y esclavos, en nuestro caso, usamos el 
 
 Se declaran las dos zonas que van a haber, la zona directa y la inversa. 
 
-## Declaración de la zona directa
+### Declaración de la zona directa
 El fichero de configuración se debe crear en /var/cache/bind/db.iesgn.org donde se ponen los registros:
 ~~~
 @	in	SOA	dns.iesgn.org.	palomagarciacampon08@.gmail.com
@@ -44,7 +45,7 @@ El SOA guarda información de la zona, y hay que guardar 4 cosas:
 NS, el nombre del servidor con autoridad en la zona. 
 
 
-## Declaración de la zona inversa
+### Declaración de la zona inversa
 Se configura /var/cavhe/bind/db.10.0.0
 ~~~
 @	in	SOA	dns.iesgn.org.	palomagarciacampon08@.gmail.com
